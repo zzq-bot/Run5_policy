@@ -1,5 +1,4 @@
 from typing import Any, Optional, Tuple, Union, Dict, List
-import copy
 from collections import defaultdict
 
 import numpy as np
@@ -160,7 +159,7 @@ class GoGridWorldEnvV0(gym.Env):
             if self._reduce:
                 self.field = self.reduce_field(self.field)
         else:
-            self.field = copy.deepcopy(self.fixed_field)
+            self.field = self.fixed_field.copy()
             
         self.char2pos = defaultdict(list)
         for i in range(self.size):
@@ -174,7 +173,7 @@ class GoGridWorldEnvV0(gym.Env):
         if self.fixed_loc is None:
             self.loc = np.random.randint(0, self.size, 2)
         else:
-            self.loc = copy.deepcopy(self.fixed_loc)
+            self.loc = self.fixed_loc.copy()
         # 3. set score
         self.score = 0
         

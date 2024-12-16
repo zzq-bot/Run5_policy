@@ -30,6 +30,8 @@ Please conduct training in the following way (you can adjust the hyperparameters
 bash train.sh
 ```
 
+One case log is placed in `./case_log` (has been trained for about 300M sampling steps, ~6 hours, reach score 78, will be updated later)
+
 
 ## 3. Evaluation
 
