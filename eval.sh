@@ -1,0 +1,1 @@
+python RL/experiments/x_eval_ppo.py --num-simulations=128 --n-layer=6 --resume-path="./policy_ckpt/ppo_allallin.pt"

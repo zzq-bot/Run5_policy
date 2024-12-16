@@ -1,0 +1,1 @@
+python RL/experiments/x_train_ppo.py --no-norm-rew --ent-coef 0.005 --n-layer 6 --exp-name "x-6layer" --resume-path "" --no-force-all-char
