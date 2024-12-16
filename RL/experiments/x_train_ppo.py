@@ -161,45 +161,45 @@ def layer_init(layer: nn.Module, std: float = np.sqrt(2), bias_const: float = 0.
     return layer
 
 
-def evaluate(eval_envs: gym.Env, agent: nn.Module, device: torch.device, global_step: int, writer: SummaryWriter) -> None:
-    next_obs, infos = eval_envs.reset(seed=0)
-    next_obs = torch.Tensor(next_obs).to(device)
-    terminated = np.zeros(eval_envs.num_envs)
+# def evaluate(eval_envs: gym.Env, agent: nn.Module, device: torch.device, global_step: int, writer: SummaryWriter) -> None:
+#     next_obs, infos = eval_envs.reset(seed=0)
+#     next_obs = torch.Tensor(next_obs).to(device)
+#     terminated = np.zeros(eval_envs.num_envs)
 
-    record_returns = [0] * len(next_obs)
-    while True:
-        with torch.no_grad():
-            action_mask = torch.Tensor(np.stack(infos["avail_actions"])).to(device)
-            action = agent.get_eval_action(next_obs, action_mask)
-        next_obs, reward, terminations, truncations, infos = eval_envs.step(action.cpu().numpy())
-        next_done = np.logical_or(terminations, truncations)
-        terminated = np.logical_or(terminated, next_done)
-        next_obs = torch.Tensor(next_obs).to(device)
+#     record_returns = [0] * len(next_obs)
+#     while True:
+#         with torch.no_grad():
+#             action_mask = torch.Tensor(np.stack(infos["avail_actions"])).to(device)
+#             action = agent.get_eval_action(next_obs, action_mask)
+#         next_obs, reward, terminations, truncations, infos = eval_envs.step(action.cpu().numpy())
+#         next_done = np.logical_or(terminations, truncations)
+#         terminated = np.logical_or(terminated, next_done)
+#         next_obs = torch.Tensor(next_obs).to(device)
 
-        if "final_info" in infos:
-            for i, info in enumerate(infos["final_info"]):
-                if info and "episode" in info:
-                    print(f"Eval: global_step={global_step}, idx={i} episodic_return={info['score']}, episodic_shaping_return={info['episode']['r']}")
+#         if "final_info" in infos:
+#             for i, info in enumerate(infos["final_info"]):
+#                 if info and "episode" in info:
+#                     print(f"Eval: global_step={global_step}, idx={i} episodic_return={info['score']}, episodic_shaping_return={info['episode']['r']}")
 
-                    record_returns[i] = info["score"]
-                    if writer is not None:
-                        writer.add_scalar("charts/eval_episodic_return", info["score"], global_step)
-                        writer.add_scalar(
-                            "charts/eval_episodic_shaping_return",
-                            info["episode"]["r"],
-                            global_step,
-                        )
-                        writer.add_scalar("charts/eval_episodic_length", info["episode"]["l"], global_step)
-        if np.all(terminated):
-            break
+#                     record_returns[i] = info["score"]
+#                     if writer is not None:
+#                         writer.add_scalar("charts/eval_episodic_return", info["score"], global_step)
+#                         writer.add_scalar(
+#                             "charts/eval_episodic_shaping_return",
+#                             info["episode"]["r"],
+#                             global_step,
+#                         )
+#                         writer.add_scalar("charts/eval_episodic_length", info["episode"]["l"], global_step)
+#         if np.all(terminated):
+#             break
 
-    record_returns = np.array(record_returns)
-    print(record_returns, np.mean(record_returns))
-    return record_returns
+#     record_returns = np.array(record_returns)
+#     print(record_returns, np.mean(record_returns))
+#     return record_returns
 
 
 class CategoricalMasked(Categorical):
-    def __init__(self, probs=None, logits=None, validate_args=None, masks=[]):
+    def __init__(self, probs=None, logits=None, validate_args=None, masks=[]) -> None:
         self.masks = masks
         if len(self.masks) == 0:
             super(CategoricalMasked, self).__init__(probs, logits, validate_args)
@@ -208,12 +208,12 @@ class CategoricalMasked(Categorical):
             logits = torch.where(self.masks, logits, torch.tensor(-1e8).to(device))  # masks[i]=False -> invalid action -> logit=-inf
             super(CategoricalMasked, self).__init__(probs, logits, validate_args)
 
-    def entropy(self):
+    def entropy(self) -> torch.Tensor:
         if len(self.masks) == 0:
             return super(CategoricalMasked, self).entropy()
         p_log_p = (
             self.logits * self.probs
-        )  # self.logits在torch里会调用probs_to_logits；or 自身已经归一化; logits-logits.logsumexp(dim=-1, keepdims=True)
+        )
         p_log_p = torch.where(self.masks, p_log_p, torch.tensor(0.0).to(device))
         return -p_log_p.sum(-1)
 
